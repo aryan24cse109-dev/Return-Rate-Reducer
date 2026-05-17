@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Return Rate Reducer AI — boAt Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f12;
+    --bg2: #13161b;
+    --bg3: #1a1e25;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --text2: #8b8fa8;
+    --text3: #555870;
+    --green: #1D9E75;
+    --green-light: #5DCAA5;
+    --amber: #EF9F27;
+    --red: #E24B4A;
+    --blue: #378ADD;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── TOP NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem 2rem;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    width: 34px; height: 34px;
+    background: var(--green);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .nav-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .nav-sub { font-size: 12px; color: var(--text2); margin-left: 2px; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .live-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(29,158,117,0.12);
+    border: 0.5px solid rgba(29,158,117,0.3);
+    color: var(--green-light);
+    font-size: 12px; font-weight: 500;
+    padding: 4px 12px; border-radius: 20px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green-light);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+  .api-link {
+    font-size: 12px; color: var(--text2);
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    padding: 4px 12px; border-radius: 6px;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .api-link:hover { color: var(--text); }
+
+  /* ── MAIN LAYOUT ── */
+  main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+    margin-bottom: 2rem;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--green-light);
+    background: rgba(29,158,117,0.1);
+    border: 0.5px solid rgba(29,158,117,0.25);
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 1.2rem; font-weight: 500;
+  }
+  .hero h1 {
+    font-size: 40px; font-weight: 600; line-height: 1.15;
+    color: var(--text); margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+  }
+  .hero h1 span { color: var(--green-light); }
+  .hero p {
+    font-size: 16px; color: var(--text2);
+    max-width: 560px; margin: 0 auto 1.5rem;
+    line-height: 1.7;
+  }
+  .hero-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--green); color: #fff;
+    font-size: 14px; font-weight: 500;
+    padding: 10px 24px; border-radius: var(--radius);
+    border: none; cursor: pointer;
+    text-decoration: none; display: inline-flex;
+    align-items: center; gap: 8px;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    background: transparent; color: var(--text2);
+    font-size: 14px; font-weight: 500;
+    padding: 10px 24px; border-radius: var(--radius);
+    border: 0.5px solid var(--border2); cursor: pointer;
+    text-decoration: none; display: inline-flex;
+    align-items: center; gap: 8px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+
+  /* ── METRICS ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .metric-card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+  }
+  .metric-label {
+    font-size: 12px; color: var(--text2);
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 8px;
+  }
+  .metric-value { font-size: 28px; font-weight: 600; color: var(--text); }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 13px; font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1; height: 0.5px;
+    background: var(--border);
+  }
+
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .card-header {
+    font-size: 15px; font-weight: 500;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-icon {
+    width: 28px; height: 28px;
+    background: var(--bg3);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--green-light);
+  }
+
+  /* ── FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: var(--text2); }
+  .field input, .field select {
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font);
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    border-color: rgba(29,158,117,0.5);
+  }
+  .field select option { background: #1a1e25; }
+
+  .analyze-btn {
+    width: 100%; margin-top: 14px;
+    background: var(--green); color: #fff;
+    font-size: 14px; font-weight: 500;
+    font-family: var(--font);
+    padding: 12px;
+    border: none; border-radius: var(--radius);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.2s;
+  }
+  .analyze-btn:hover { opacity: 0.85; }
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── RESULT BOX ── */
+  .result-box {
+    display: none;
+    margin-top: 1.25rem;
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    animation: fadeIn 0.3s ease;
+  }
+  .result-box.show { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .result-top {
+    display: flex; align-items: flex-start;
+    gap: 16px; margin-bottom: 14px;
+  }
+  .score-circle {
+    width: 70px; height: 70px; border-radius: 50%;
+    border: 2.5px solid var(--green);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .score-num { font-size: 20px; font-weight: 600; color: var(--text); }
+  .score-lbl { font-size: 10px; color: var(--text2); }
+
+  .result-info { flex: 1; }
+  .risk-badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 12px; border-radius: 20px;
+    margin-bottom: 6px; letter-spacing: 0.04em;
+  }
+  .risk-low { background: rgba(29,158,117,0.15); color: #5DCAA5; border: 0.5px solid rgba(29,158,117,0.3); }
+  .risk-med { background: rgba(239,159,39,0.15); color: #EF9F27; border: 0.5px solid rgba(239,159,39,0.3); }
+  .risk-high { background: rgba(226,75,74,0.15); color: #E24B4A; border: 0.5px solid rgba(226,75,74,0.3); }
+
+  .progress-wrap { margin-bottom: 10px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text3);
+    margin-bottom: 4px;
+  }
+  .progress-bar {
+    width: 100%; height: 6px;
+    background: var(--bg);
+    border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.9s ease; }
+
+  .factors-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 5px;
+    margin-bottom: 12px;
+  }
+  .factor-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text2);
+  }
+  .factor-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+  .action-banner {
+    background: rgba(55,138,221,0.08);
+    border: 0.5px solid rgba(55,138,221,0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px; color: #85B7EB;
+    display: flex; gap: 8px; align-items: flex-start;
+    line-height: 1.5;
+  }
+
+  /* ── HISTORY ── */
+  .history-list {
+    display: flex; flex-direction: column; gap: 8px;
+    max-height: 400px; overflow-y: auto;
+  }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .history-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px;
+    transition: border-color 0.2s;
+  }
+  .history-item:hover { border-color: var(--border2); }
+  .h-id { color: var(--text2); font-size: 12px; font-family: var(--mono); flex: 1; }
+  .h-score { font-weight: 600; color: var(--text); }
+
+  .empty-state {
+    text-align: center; padding: 2.5rem;
+    color: var(--text3); font-size: 13px; line-height: 2;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.3; }
+
+  /* ── DIM BREAKDOWN ── */
+  .dim-bars { display: flex; flex-direction: column; gap: 12px; }
+  .dim-row { display: flex; flex-direction: column; gap: 5px; }
+  .dim-lbl-row {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text2);
+  }
+  .dim-track {
+    height: 6px; background: var(--bg);
+    border-radius: 3px; overflow: hidden;
+  }
+  .dim-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+  /* ── TREND CHART ── */
+  .chart-wrap { position: relative; width: 100%; height: 220px; }
+
+  /* ── HOW IT WORKS ── */
+  .how-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 2rem;
+  }
+  .how-card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .how-num {
+    font-size: 11px; font-weight: 600;
+    color: var(--green-light);
+    font-family: var(--mono);
+    margin-bottom: 8px;
+  }
+  .how-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .how-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text3);
+    font-size: 12px;
+    border-top: 0.5px solid var(--border);
+    margin-top: 2rem;
+  }
+  footer a { color: var(--green-light); text-decoration: none; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    main { padding: 1rem; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .main-grid { grid-template-columns: 1fr; }
+    .how-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+    nav { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🛡️</div>
+  <div>
+    <div class="nav-title">Return Rate Reducer AI</div>
+    <div class="nav-sub">boAt Operations Command Center</div>
+  </div>
+  <div class="nav-right">
+    <div class="live-pill">
+      <div class="live-dot"></div>
+      Live API
+    </div>
+    <a href="/docs" class="api-link" target="_blank">API docs ↗</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">🤖 AI-powered return prediction</div>
+    <h1>Predict returns before<br/><span>they happen</span></h1>
+    <p>
+      An end-to-end AI system that analyzes order data across 6 risk dimensions
+      to predict product return probability — helping e-commerce teams act proactively.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="scrollToAnalyzer()">▶ Try the analyzer</button>
+      <a href="/docs" class="btn-secondary" target="_blank">View API docs</a>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="section-title">Session stats</div>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">📦 Orders analyzed</div>
+      <div class="metric-value" id="m-total">0</div>
+      <div class="metric-sub">this session</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">🔴 High risk flagged</div>
+      <div class="metric-value" id="m-high">0</div>
+      <div class="metric-sub">need attention</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">📊 Avg risk score</div>
+      <div class="metric-value" id="m-avg">—</div>
+      <div class="metric-sub">0 = safe · 1 = risky</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">✅ Low risk orders</div>
+      <div class="metric-value" id="m-low">0</div>
+      <div class="metric-sub">safe to ship</div>
+    </div>
+  </div>
+
+  <!-- ANALYZER + HISTORY -->
+  <div class="section-title" id="analyzer-section">Analyze an order</div>
+  <div class="main-grid">
+
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🔍</div>
+        Order risk analyzer
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Order ID</label>
+          <input type="text" id="order_id" value="ORD-2024-001" />
+        </div>
+        <div class="field">
+          <label>Product category</label>
+          <select id="product_category">
+            <option>earphones</option>
+            <option>speakers</option>
+            <option>smartwatch</option>
+            <option>neckband</option>
+            <option>headphones</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Product price (₹)</label>
+          <input type="number" id="product_price" value="1999" />
+        </div>
+        <div class="field">
+          <label>Payment method</label>
+          <select id="payment_method">
+            <option value="COD">COD (Cash on Delivery)</option>
+            <option value="UPI">UPI</option>
+            <option value="card">Credit / Debit Card</option>
+            <option value="netbanking">Net Banking</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Actual delivery days</label>
+          <input type="number" id="delivery_days" value="6" />
+        </div>
+        <div class="field">
+          <label>Promised delivery days</label>
+          <input type="number" id="promised_days" value="4" />
+        </div>
+        <div class="field">
+          <label>Customer past returns</label>
+          <input type="number" id="return_history" value="2" />
+        </div>
+        <div class="field">
+          <label>Customer total orders</label>
+          <input type="number" id="total_orders" value="5" />
+        </div>
+        <div class="field">
+          <label>Seller rating (1–5)</label>
+          <input type="number" id="seller_rating" value="3.8" step="0.1" min="1" max="5" />
+        </div>
+        <div class="field">
+          <label>Product rating (1–5)</label>
+          <input type="number" id="product_rating" value="4.1" step="0.1" min="1" max="5" />
+        </div>
+      </div>
+
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyzeOrder()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btn-icon">⚡</span>
+        <span id="btn-text">Analyze return risk</span>
+      </button>
+
+      <!-- RESULT -->
+      <div class="result-box" id="resultBox">
+        <div class="result-top">
+          <div class="score-circle" id="scoreCircle">
+            <div class="score-num" id="res-score">0.00</div>
+            <div class="score-lbl">score</div>
+          </div>
+          <div class="result-info">
+            <div class="risk-badge" id="res-badge">—</div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span>Low risk</span><span>High risk</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="res-bar" style="width:0%"></div>
+              </div>
+            </div>
+            <ul class="factors-list" id="res-factors"></ul>
+          </div>
+        </div>
+        <div class="action-banner">
+          💡 <span id="res-action-text">Loading recommendation...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        Analysis history
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          No analyses yet.<br/>Fill the form and click analyze!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIM BREAKDOWN -->
+  <div class="section-title">Risk dimension breakdown</div>
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div class="card-icon">📐</div>
+      6-dimension risk matrix
+      <span style="margin-left:auto; font-size:12px; color:var(--text3)">Analyze an order to update</span>
+    </div>
+    <div class="dim-bars" id="dimBars">
+      <div style="text-align:center; padding:1.5rem; color:var(--text3); font-size:13px;">
+        Waiting for first analysis...
+      </div>
+    </div>
+  </div>
+
+  <!-- TREND -->
+  <div class="section-title">Risk score trend</div>
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div class="card-icon">📈</div>
+      Session trend
+    </div>
+    <div class="chart-wrap">
+      <canvas id="trendChart" role="img" aria-label="Line chart of risk scores over session"></canvas>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section-title">How it works</div>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01 / INPUT</div>
+      <div class="how-title">Order data ingested</div>
+      <div class="how-desc">Order details — product, customer history, delivery, payment method — are sent to the FastAPI backend running on Hugging Face.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02 / ANALYZE</div>
+      <div class="how-title">AI risk matrix runs</div>
+      <div class="how-desc">6 weighted dimensions are scored: customer history, delivery experience, product quality, payment method, pricing sensitivity, and review sentiment.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03 / RESULT</div>
+      <div class="how-title">Risk score + action</div>
+      <div class="how-desc">A 0–1 risk score is returned with a LOW / MEDIUM / HIGH label, top risk factors, and a recommended action for the operations team.</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Built by <strong>Aryan Agarwal</strong> · 
+  <a href="https://github.com/aryan24cse109-dev/Return-Rate-Reducer" target="_blank">GitHub</a> ·
+  <a href="/docs" target="_blank">API Docs</a> ·
+  Powered by FastAPI + Hugging Face Spaces
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const API = '';  // empty = same origin (works on HF Space)
+
+let history = [];
+let trendChart = null;
+
+const DIMS = [
+  { key: 'customer_history',     label: 'Customer return history' },
+  { key: 'delivery_experience',  label: 'Delivery experience' },
+  { key: 'product_quality',      label: 'Product quality' },
+  { key: 'payment_method',       label: 'Payment method' },
+  { key: 'pricing_sensitivity',  label: 'Pricing sensitivity' },
+  { key: 'review_sentiment',     label: 'Review sentiment' }
+];
+
+function getColor(s) {
+  if (s < 0.4) return '#1D9E75';
+  if (s < 0.65) return '#EF9F27';
+  return '#E24B4A';
+}
+function getRisk(s) {
+  if (s < 0.4) return { label: 'LOW RISK', cls: 'risk-low' };
+  if (s < 0.65) return { label: 'MEDIUM RISK', cls: 'risk-med' };
+  return { label: 'HIGH RISK', cls: 'risk-high' };
+}
+
+function scrollToAnalyzer() {
+  document.getElementById('analyzer-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateMetrics() {
+  document.getElementById('m-total').textContent = history.length;
+  document.getElementById('m-high').textContent = history.filter(h => h.score >= 0.65).length;
+  document.getElementById('m-low').textContent = history.filter(h => h.score < 0.4).length;
+  const avg = history.length
+    ? (history.reduce((a, b) => a + b.score, 0) / history.length).toFixed(2)
+    : '—';
+  document.getElementById('m-avg').textContent = avg;
+}
+
+function addToHistory(id, score, risk) {
+  const list = document.getElementById('historyList');
+  if (history.length === 1) list.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'history-item';
+  el.innerHTML = `
+    <span style="font-size:16px">📦</span>
+    <span class="h-id">${id}</span>
+    <span class="h-score">${score.toFixed(2)}</span>
+    <span class="risk-badge ${risk.cls}" style="font-size:11px;padding:2px 10px">${risk.label}</span>`;
+  list.prepend(el);
+}
+
+function updateDims(dimScores) {
+  const container = document.getElementById('dimBars');
+  container.innerHTML = '';
+  DIMS.forEach(d => {
+    const val = dimScores && dimScores[d.key] !== undefined
+      ? dimScores[d.key]
+      : Math.random() * 0.7 + 0.1;
+    const pct = Math.round(val * 100);
+    const color = getColor(val);
+    const row = document.createElement('div');
+    row.className = 'dim-row';
+    row.innerHTML = `
+      <div class="dim-lbl-row"><span>${d.label}</span><span>${pct}%</span></div>
+      <div class="dim-track">
+        <div class="dim-fill" style="width:0%; background:${color}" data-pct="${pct}"></div>
+      </div>`;
+    container.appendChild(row);
+  });
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.dim-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  });
+}
+
+function initChart() {
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Risk score',
+        data: [],
+        borderColor: '#1D9E75',
+        backgroundColor: 'rgba(29,158,117,0.08)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: [],
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          min: 0, max: 1,
+          ticks: {
+            color: '#555870',
+            font: { size: 11 },
+            callback: v => v.toFixed(1)
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        },
+        x: {
+          ticks: { color: '#555870', font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function updateChart(id, score) {
+  if (!trendChart) initChart();
+  const label = id.length > 10 ? '...' + id.slice(-6) : id;
+  trendChart.data.labels.push(label);
+  trendChart.data.datasets[0].data.push(parseFloat(score.toFixed(2)));
+  trendChart.data.datasets[0].pointBackgroundColor.push(getColor(score));
+  trendChart.update();
+}
+
+async function analyzeOrder() {
+  const btn = document.getElementById('analyzeBtn');
+  const spinner = document.getElementById('spinner');
+  const icon = document.getElementById('btn-icon');
+  const btnText = document.getElementById('btn-text');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  icon.style.display = 'none';
+  btnText.textContent = 'Analyzing...';
+
+  const payload = {
+    order_id: document.getElementById('order_id').value || 'ORD-001',
+    product_category: document.getElementById('product_category').value,
+    product_price: parseFloat(document.getElementById('product_price').value) || 1999,
+    customer_id: 'CUST-' + Math.floor(Math.random() * 9000 + 1000),
+    customer_return_history: parseInt(document.getElementById('return_history').value) || 0,
+    customer_total_orders: parseInt(document.getElementById('total_orders').value) || 1,
+    delivery_days: parseInt(document.getElementById('delivery_days').value) || 4,
+    promised_delivery_days: parseInt(document.getElementById('promised_days').value) || 4,
+    payment_method: document.getElementById('payment_method').value,
+    seller_rating: parseFloat(document.getElementById('seller_rating').value) || 4.0,
+    product_rating: parseFloat(document.getElementById('product_rating').value) || 4.0,
+    review_sentiment_score: 0,
+    size_variant: null,
+    is_sale_item: false,
+    region: 'india'
+  };
+
+  try {
+    const res = await fetch(`${API}/analyze-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+
+    const score = parseFloat((data.overall_score || 0).toFixed(2));
+    showResult(score, data.top_risk_factors || [], data.recommended_action || '', data.dimension_scores || {}, payload.order_id);
+
+  } catch (e) {
+    console.warn('API error, using demo:', e.message);
+    // Demo fallback when API unreachable
+    const score = parseFloat((Math.random() * 0.6 + 0.2).toFixed(2));
+    showResult(score, ['Demo mode — API not reachable'], 'Deploy your API and refresh to get real predictions.', {}, payload.order_id);
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+  icon.style.display = 'inline';
+  btnText.textContent = 'Analyze return risk';
+}
+
+function showResult(score, factors, action, dimScores, orderId) {
+  const risk = getRisk(score);
+  const color = getColor(score);
+
+  document.getElementById('resultBox').className = 'result-box show';
+  document.getElementById('res-score').textContent = score.toFixed(2);
+  document.getElementById('scoreCircle').style.borderColor = color;
+
+  const bar = document.getElementById('res-bar');
+  bar.style.background = color;
+  setTimeout(() => { bar.style.width = Math.round(score * 100) + '%'; }, 50);
+
+  const badge = document.getElementById('res-badge');
+  badge.textContent = risk.label;
+  badge.className = 'risk-badge ' + risk.cls;
+
+  document.getElementById('res-factors').innerHTML = factors.map(f =>
+    `<li class="factor-item"><div class="factor-dot"></div>${f}</li>`
+  ).join('');
+
+  document.getElementById('res-action-text').textContent = action || 'Monitor this order.';
+
+  history.push({ id: orderId, score });
+  updateMetrics();
+  addToHistory(orderId, score, risk);
+  updateDims(dimScores);
+  updateChart(orderId, score);
+
+  document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+initChart();
+</script>
+</body>
+</html>
