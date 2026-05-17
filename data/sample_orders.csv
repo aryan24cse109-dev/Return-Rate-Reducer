@@ -1,0 +1,11 @@
+order_id,product_category,product_price,customer_id,customer_return_history,customer_total_orders,delivery_days,promised_delivery_days,payment_method,seller_rating,product_rating,review_sentiment_score,is_sale_item,region
+ORD-2024-0001,earphones,1999.0,CUST-1001,0,5,4,4,prepaid,4.5,4.3,0.6,False,North
+ORD-2024-0002,smartwatch,3499.0,CUST-1002,2,8,7,4,COD,3.2,3.5,-0.3,True,South
+ORD-2024-0003,speaker,2499.0,CUST-1003,0,12,3,5,prepaid,4.8,4.7,0.8,False,East
+ORD-2024-0004,neckband,1299.0,CUST-1004,1,3,6,4,EMI,3.8,3.9,0.1,False,West
+ORD-2024-0005,earphones,4999.0,CUST-1005,4,5,9,3,COD,2.5,2.8,-0.7,True,Central
+ORD-2024-0006,smartwatch,7999.0,CUST-1006,0,20,4,4,prepaid,4.9,4.8,0.9,False,North
+ORD-2024-0007,earphones,999.0,CUST-1007,1,2,5,4,COD,3.5,3.7,0.0,True,South
+ORD-2024-0008,speaker,1799.0,CUST-1008,0,7,4,5,prepaid,4.2,4.1,0.4,False,East
+ORD-2024-0009,neckband,2199.0,CUST-1009,3,4,8,3,COD,2.8,3.0,-0.5,True,West
+ORD-2024-0010,smartwatch,5499.0,CUST-1010,0,15,3,4,prepaid,4.7,4.6,0.7,False,Central
