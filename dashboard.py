@@ -1,129 +1,294 @@
-import streamlit as pd_stream
-import requests
+"""
+dashboard.py — Streamlit analytics dashboard
+boAt Return Rate Reducer — Operations Command Center
+"""
+
+import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import requests
+import json
+from typing import List, Dict
 
-# --- 🌐 BACKEND GATEWAY ROUTING CONFIGURATION ---
-BACKEND_URL = "http://localhost:8000/api/v1/order/analyze"
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
 
-# Setting up global application viewport page metrics configuration
-pd_stream.set_page_config(
-    page_title="boAt Ops Center - Return Rate Reducer AI",
+API_BASE = "http://localhost:8000"
+
+st.set_page_config(
+    page_title="⚡ boAt Return Rate Reducer",
     page_icon="⚡",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-pd_stream.title("⚡ boAt Operations Command Center — Return Rate Reducer AI")
-pd_stream.markdown("### Asynchronous Ingestion & Machine Learning Risk Interception Engine")
-pd_stream.markdown("---")
-
-# --- 📊 STRUCTURAL HISTORICAL MOCK DATABASE STATE ---
-if "order_history" not in pd_stream.session_state:
-    pd_stream.session_state.order_history = [
-        {"Order ID": "boAt_44102", "Pincode": "110001", "Type": "COD", "Value": 1499.0, "Risk Score": 70.0, "Tier": "CRITICAL / FLAGGED", "Status": "HOLD - REVIEW"},
-        {"Order ID": "boAt_44103", "Pincode": "302020", "Type": "PREPAID", "Value": 2999.0, "Risk Score": 30.0, "Tier": "LOW RISK", "Status": "FULFILLED"},
-        {"Order ID": "boAt_44104", "Pincode": "400001", "Type": "COD", "Value": 4500.0, "Risk Score": 85.0, "Tier": "CRITICAL / FLAGGED", "Status": "HOLD - REVIEW"},
-        {"Order ID": "boAt_44105", "Pincode": "324005", "Type": "PREPAID", "Value": 999.0, "Risk Score": 15.0, "Tier": "LOW RISK", "Status": "FULFILLED"}
-    ]
-
-# --- 📈 UPPER HIGH-LEVEL METRICS CARDS PANEL ---
-total_tracked = len(pd_stream.session_state.order_history)
-df_history = pd.DataFrame(pd_stream.session_state.order_history)
-critical_count = int(df_history[df_history["Risk Score"] >= 60.0].shape[0])
-leakage_prevented = float(df_history[df_history["Status"] == "HOLD - REVIEW"]["Value"].sum())
-
-col1, col2, col3 = pd_stream.columns(3)
-with col1:
-    pd_stream.metric(label="Total Order Streams Tracked", value=total_tracked)
-with col2:
-    pd_stream.metric(label="High Risk Interceptions Flagged", value=f"{critical_count} Nodes", delta=f"{int((critical_count/total_tracked)*100)}% Risk Ratio", delta_color="inverse")
-with col3:
-    pd_stream.metric(label="Capital Loss Exposure Locked", value=f"₹{leakage_prevented:,.2f}", delta="40% Est. RTO Drop", delta_color="normal")
-
-pd_stream.markdown("---")
-
-# --- 📥 SIMULATION CONTROLLER LAYER (ORDER INGESTION FORM) ---
-pd_stream.subheader("📥 Ingest Live Streaming Order Node Simulation")
-
-form_col1, form_col2, form_col3 = pd_stream.columns(3)
-with form_col1:
-    order_id = pd_stream.text_input("Order Registration Token", value="boAt_2026_MX")
-    customer_id = pd_stream.text_input("Customer ID Unique Token", value="cust_7718A")
-with form_col2:
-    pincode = pd_stream.text_input("Logistical Fullfillment Pincode (6 digits)", value="324005")
-    payment_mode = pd_stream.selectbox("Payment Gateway Channel", ["COD", "PREPAID"])
-with form_col3:
-    order_value = pd_stream.number_input("Invoice Transaction Financial Value (INR)", value=2499.00)
-    feedback_text = pd_stream.text_area("Historical CRM Customer Feedback Remarks Data", value="The product size description was wrong last time, fit mismatch issue.")
-
-if pd_stream.button("🚀 Push Node to AI Pipeline Server", use_container_width=True):
-    # Construct standard payload verification payload mapping format structure
-    payload = {
-        "order_id": order_id,
-        "customer_id": customer_id,
-        "pincode": pincode,
-        "payment_mode": payment_mode,
-        "order_value": order_value,
-        "customer_historical_feedback": feedback_text
+# Custom CSS
+st.markdown("""
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 4px solid;
+        margin: 8px 0;
     }
-    
+    .risk-critical { border-color: #ff4b4b; }
+    .risk-high     { border-color: #ffa500; }
+    .risk-medium   { border-color: #ffd700; }
+    .risk-low      { border-color: #00cc44; }
+    .header-title  { font-size: 2.2rem; font-weight: 700; color: #00d4ff; }
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Sidebar
+# ---------------------------------------------------------------------------
+
+with st.sidebar:
+    st.image("https://via.placeholder.com/200x60?text=boAt+RRR", use_column_width=True)
+    st.markdown("## ⚙️ Settings")
+    api_url = st.text_input("API URL", value=API_BASE)
+    st.markdown("---")
+    page = st.radio("Navigate", ["📊 Dashboard", "🔍 Single Order Analysis", "📦 Batch Upload", "📈 Model Insights"])
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def check_api_health() -> bool:
     try:
-        # Hitting active FastAPI engine async cluster endpoint server routing
-        with pd_stream.spinner("Evaluating model matrix variables through DistilBERT..."):
-            response = requests.post(BACKEND_URL, json=payload, timeout=10)
-            
-        if response.status_code == 200:
-            result_data = response.json()
-            
-            # Extract calculated algorithmic scalars from pipeline payload metrics dictionary
-            calculated_risk = result_data["metrics_summary"]["return_probability_score"]
-            risk_tier = result_data["metrics_summary"]["risk_tier"]
-            flags = result_data["metrics_summary"]["detected_anomaly_flags"]
-            root_cause = result_data["ai_semantic_insights"]["tagged_root_cause"]
-            
-            # Appending computed structures dataframe row update arrays array index matrix updates
-            new_node = {
-                "Order ID": order_id,
-                "Pincode": pincode,
-                "Type": payment_mode,
-                "Value": order_value,
-                "Risk Score": calculated_risk,
-                "Tier": risk_tier,
-                "Status": "HOLD - REVIEW" if calculated_risk >= 50.0 else "FULFILLED"
-            }
-            pd_stream.session_state.order_history.append(new_node)
-            pd_stream.rerun()
-            
-        else:
-            pd_stream.error(f"Backend Service Validation Rejection Error Check: {response.text}")
-    except Exception as network_err:
-        pd_stream.warning(f"Simulated Mode Fallback Triggered (Localhost server offline). Calculations computed locally.")
-        # Fallback heuristic handling logic engine block mapping calculations execution parameters if local server offline
-        fallback_risk = 35.0 + (30.0 if payment_mode == "COD" else 0.0)
-        new_node = {
-            "Order ID": order_id,
-            "Pincode": pincode,
-            "Type": payment_mode,
-            "Value": order_value,
-            "Risk Score": fallback_risk,
-            "Tier": "ELEVATED" if fallback_risk >= 60.0 else "NORMAL",
-            "Status": "HOLD - REVIEW" if fallback_risk >= 60.0 else "FULFILLED"
+        r = requests.get(f"{api_url}/health", timeout=3)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
+def analyze_single(order: dict) -> dict:
+    r = requests.post(f"{api_url}/analyze-order", json=order, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def analyze_batch(orders: List[dict]) -> dict:
+    r = requests.post(f"{api_url}/batch-analyze", json={"orders": orders}, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+
+def risk_color(level: str) -> str:
+    return {"LOW": "#00cc44", "MEDIUM": "#ffd700", "HIGH": "#ffa500", "CRITICAL": "#ff4b4b"}.get(level, "#aaa")
+
+
+def generate_sample_data(n: int = 50) -> pd.DataFrame:
+    """Generate synthetic order data for demo."""
+    np.random.seed(42)
+    categories = ["earphones", "smartwatch", "speaker", "neckband"]
+    regions = ["North", "South", "East", "West", "Central"]
+    payments = ["COD", "prepaid", "EMI"]
+    return pd.DataFrame({
+        "order_id": [f"ORD-2024-{str(i).zfill(4)}" for i in range(n)],
+        "product_category": np.random.choice(categories, n),
+        "product_price": np.random.uniform(500, 8000, n).round(2),
+        "customer_id": [f"CUST-{np.random.randint(1000, 9999)}" for _ in range(n)],
+        "customer_return_history": np.random.randint(0, 6, n),
+        "customer_total_orders": np.random.randint(1, 30, n),
+        "delivery_days": np.random.randint(1, 10, n),
+        "promised_delivery_days": np.random.randint(2, 6, n),
+        "payment_method": np.random.choice(payments, n),
+        "seller_rating": np.random.uniform(2.5, 5.0, n).round(1),
+        "product_rating": np.random.uniform(2.5, 5.0, n).round(1),
+        "review_sentiment_score": np.random.uniform(-1.0, 1.0, n).round(2),
+        "is_sale_item": np.random.choice([True, False], n),
+        "region": np.random.choice(regions, n),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Pages
+# ---------------------------------------------------------------------------
+
+api_live = check_api_health()
+status_color = "🟢" if api_live else "🔴"
+st.sidebar.markdown(f"**API Status:** {status_color} {'Connected' if api_live else 'Offline'}")
+
+# ── 1. Dashboard ─────────────────────────────────────────────────────────────
+if page == "📊 Dashboard":
+    st.markdown('<p class="header-title">⚡ Return Rate Reducer — Command Center</p>', unsafe_allow_html=True)
+    st.markdown("Real-time return risk intelligence for boAt operations.")
+
+    # Load demo data
+    with st.spinner("Loading sample order data..."):
+        df = generate_sample_data(100)
+
+    if api_live:
+        with st.spinner("Scoring orders via AI engine..."):
+            try:
+                orders = df.to_dict(orient="records")
+                result = analyze_batch(orders)
+                results_df = pd.DataFrame(result["results"])
+                summary = result["summary"]
+                df = df.merge(results_df[["order_id", "overall_score", "risk_level"]], on="order_id")
+            except Exception as e:
+                st.warning(f"API error: {e}. Showing mock data.")
+                df["risk_level"] = np.random.choice(["LOW", "MEDIUM", "HIGH", "CRITICAL"], len(df), p=[0.4, 0.3, 0.2, 0.1])
+                df["overall_score"] = np.random.uniform(0, 1, len(df))
+                summary = {"distribution": {"LOW": 40, "MEDIUM": 30, "HIGH": 20, "CRITICAL": 10}, "avg_risk_score": 0.38, "high_risk_pct": 30}
+    else:
+        df["risk_level"] = np.random.choice(["LOW", "MEDIUM", "HIGH", "CRITICAL"], len(df), p=[0.4, 0.3, 0.2, 0.1])
+        df["overall_score"] = np.random.uniform(0, 1, len(df))
+        summary = {"distribution": {"LOW": 40, "MEDIUM": 30, "HIGH": 20, "CRITICAL": 10}, "avg_risk_score": 0.38, "high_risk_pct": 30}
+
+    # KPI cards
+    col1, col2, col3, col4 = st.columns(4)
+    dist = summary.get("distribution", {})
+    col1.metric("🔴 Critical", dist.get("CRITICAL", 0), help="Requires immediate intervention")
+    col2.metric("🟠 High Risk", dist.get("HIGH", 0), help="Needs proactive outreach")
+    col3.metric("🟡 Medium Risk", dist.get("MEDIUM", 0))
+    col4.metric("🟢 Low Risk", dist.get("LOW", 0))
+
+    st.markdown("---")
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.subheader("Risk Distribution")
+        dist_df = pd.DataFrame(list(dist.items()), columns=["Level", "Count"])
+        colors = [risk_color(l) for l in dist_df["Level"]]
+        fig = px.pie(dist_df, names="Level", values="Count", color="Level",
+                     color_discrete_map={l: risk_color(l) for l in dist_df["Level"]},
+                     hole=0.45)
+        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white")
+        st.plotly_chart(fig, use_container_width=True)
+
+    with c2:
+        st.subheader("Risk Score by Category")
+        fig2 = px.box(df, x="product_category", y="overall_score", color="product_category",
+                      labels={"overall_score": "Risk Score", "product_category": "Category"})
+        fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white", showlegend=False)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    st.subheader("📋 High-Risk Orders (requires action)")
+    high_risk = df[df["risk_level"].isin(["HIGH", "CRITICAL"])].sort_values("overall_score", ascending=False)
+    if not high_risk.empty:
+        st.dataframe(
+            high_risk[["order_id", "product_category", "product_price", "payment_method", "risk_level", "overall_score"]]
+            .head(20)
+            .style.applymap(lambda v: f"color: {risk_color(v)}" if v in ["LOW","MEDIUM","HIGH","CRITICAL"] else "", subset=["risk_level"]),
+            use_container_width=True,
+        )
+    else:
+        st.success("No high-risk orders detected!")
+
+# ── 2. Single Order Analysis ─────────────────────────────────────────────────
+elif page == "🔍 Single Order Analysis":
+    st.subheader("🔍 Single Order Risk Analysis")
+    with st.form("order_form"):
+        c1, c2, c3 = st.columns(3)
+        order_id    = c1.text_input("Order ID", "ORD-2024-0001")
+        customer_id = c2.text_input("Customer ID", "CUST-5678")
+        category    = c3.selectbox("Category", ["earphones", "smartwatch", "speaker", "neckband"])
+
+        c4, c5, c6 = st.columns(3)
+        price   = c4.number_input("Price (₹)", 100.0, 50000.0, 1999.0)
+        payment = c5.selectbox("Payment Method", ["COD", "prepaid", "EMI"])
+        region  = c6.selectbox("Region", ["North", "South", "East", "West", "Central"])
+
+        c7, c8, c9, c10 = st.columns(4)
+        returns        = c7.number_input("Past Returns", 0, 50, 1)
+        total_orders   = c8.number_input("Total Orders", 1, 500, 5)
+        delivery_days  = c9.number_input("Actual Delivery (days)", 1, 30, 6)
+        promised_days  = c10.number_input("Promised Delivery (days)", 1, 15, 4)
+
+        c11, c12, c13 = st.columns(3)
+        seller_rating  = c11.slider("Seller Rating", 1.0, 5.0, 3.8)
+        product_rating = c12.slider("Product Rating", 1.0, 5.0, 4.0)
+        sentiment      = c13.slider("Review Sentiment", -1.0, 1.0, 0.2)
+
+        is_sale = st.checkbox("Sale Item?")
+        submitted = st.form_submit_button("🔎 Analyze Risk")
+
+    if submitted:
+        order_payload = {
+            "order_id": order_id, "product_category": category, "product_price": price,
+            "customer_id": customer_id, "customer_return_history": returns,
+            "customer_total_orders": total_orders, "delivery_days": delivery_days,
+            "promised_delivery_days": promised_days, "payment_method": payment,
+            "seller_rating": seller_rating, "product_rating": product_rating,
+            "review_sentiment_score": sentiment, "is_sale_item": is_sale, "region": region,
         }
-        pd_stream.session_state.order_history.append(new_node)
-        pd_stream.rerun()
+        if api_live:
+            with st.spinner("Analysing..."):
+                result = analyze_single(order_payload)
+        else:
+            st.warning("API offline — showing mock result")
+            result = {"order_id": order_id, "overall_score": 0.62, "risk_level": "HIGH",
+                      "dimension_scores": {}, "top_risk_factors": ["Mock data"], "recommended_action": "—", "confidence": 0.7}
 
-pd_stream.markdown("---")
+        lvl = result["risk_level"]
+        st.markdown(f"### Result: <span style='color:{risk_color(lvl)};font-size:1.5rem'>{'🔴' if lvl=='CRITICAL' else '🟠' if lvl=='HIGH' else '🟡' if lvl=='MEDIUM' else '🟢'} {lvl}</span>", unsafe_allow_html=True)
 
-# --- 🖥️ SYSTEM TERMINAL REAL-TIME TRACKING REPO DISPLAY ---
-pd_stream.subheader("📋 Real-Time Logistical Stream Fleet Monitor")
-updated_df = pd.DataFrame(pd_stream.session_state.order_history)
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Overall Risk Score", f"{result['overall_score']:.2%}")
+        col2.metric("Risk Level", result["risk_level"])
+        col3.metric("Model Confidence", f"{result['confidence']:.0%}")
 
-# Dynamic color rendering injection mapping tracking style function boundaries
-def style_risk_grid(row_node):
-    color = 'background-color: #ffcccc' if row_node['Risk Score'] >= 60.0 else 'background-color: #ccffcc'
-    return [color] * len(row_node)
+        st.info(f"**Recommended Action:** {result['recommended_action']}")
 
-pd_stream.dataframe(
-    updated_df.style.apply(style_risk_grid, axis=1),
-    use_container_width=True
-)
+        if result.get("dimension_scores"):
+            st.subheader("Risk Dimensions Breakdown")
+            dims = result["dimension_scores"]
+            fig = go.Figure(go.Bar(
+                x=list(dims.values()), y=list(dims.keys()), orientation="h",
+                marker_color=[risk_color("HIGH" if v > 0.55 else "MEDIUM" if v > 0.30 else "LOW") for v in dims.values()]
+            ))
+            fig.update_layout(xaxis_range=[0, 1], paper_bgcolor="rgba(0,0,0,0)", font_color="white", height=300)
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.subheader("⚠️ Top Risk Factors")
+        for f in result.get("top_risk_factors", []):
+            st.markdown(f"• {f}")
+
+# ── 3. Batch Upload ───────────────────────────────────────────────────────────
+elif page == "📦 Batch Upload":
+    st.subheader("📦 Batch Order Analysis")
+    st.markdown("Upload a CSV of orders to get risk scores for all of them.")
+    st.download_button("⬇️ Download Sample CSV", generate_sample_data(10).to_csv(index=False),
+                       file_name="sample_orders.csv", mime="text/csv")
+
+    uploaded = st.file_uploader("Upload Orders CSV", type=["csv"])
+    if uploaded:
+        df = pd.read_csv(uploaded)
+        st.write(f"Loaded **{len(df)} orders**. Preview:")
+        st.dataframe(df.head(5), use_container_width=True)
+        if st.button("🚀 Run Batch Analysis"):
+            if api_live:
+                with st.spinner("Running batch analysis..."):
+                    result = analyze_batch(df.to_dict(orient="records"))
+                results_df = pd.DataFrame(result["results"])
+                st.success(f"✅ Analysis complete! High-risk orders: {result['summary']['high_risk_count']}")
+                st.dataframe(results_df, use_container_width=True)
+                st.download_button("⬇️ Download Results", results_df.to_csv(index=False),
+                                   file_name="risk_results.csv", mime="text/csv")
+            else:
+                st.error("API is offline. Please start the FastAPI server first.")
+
+# ── 4. Model Insights ─────────────────────────────────────────────────────────
+elif page == "📈 Model Insights":
+    st.subheader("📈 Risk Dimension Weights")
+    weights = {"customer_history": 0.25, "delivery_experience": 0.20, "product_quality": 0.20,
+               "payment_method": 0.15, "pricing_sensitivity": 0.10, "review_sentiment": 0.10}
+    fig = px.bar(x=list(weights.keys()), y=list(weights.values()),
+                 labels={"x": "Dimension", "y": "Weight"},
+                 color=list(weights.values()), color_continuous_scale="Blues")
+    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white")
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Risk Thresholds")
+    threshold_data = {"Level": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+                      "Min Score": [0.0, 0.30, 0.55, 0.75],
+                      "Max Score": [0.30, 0.55, 0.75, 1.00]}
+    st.table(pd.DataFrame(threshold_data))
