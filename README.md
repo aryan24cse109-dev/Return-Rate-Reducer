@@ -1,6 +1,16 @@
 # ⚡ Return Rate Reducer AI — boAt Operations Command Center
 
-> An AI-powered system to predict, analyse, and reduce product return rates using a multi-dimensional risk matrix, ML models, and a real-time Streamlit dashboard.
+> An AI-powered system to predict, analyse, and reduce product return rates using a multi-dimensional risk matrix, ML models, and a real-time dashboard.
+
+---
+
+## 🌐 Live Demo
+
+| Interface | Link |
+|---|---|
+| 🚀 **Live API (Hugging Face)** | [https://aryan2323-return-rate-reducer.hf.space](https://aryan2323-return-rate-reducer.hf.space) |
+| 📊 **Live Dashboard** | [https://aryan2323-return-rate-reducer.hf.space/dashboard](https://aryan2323-return-rate-reducer.hf.space/dashboard) |
+| 📖 **Interactive API Docs** | [https://aryan2323-return-rate-reducer.hf.space/docs](https://aryan2323-return-rate-reducer.hf.space/docs) |
 
 ---
 
@@ -11,7 +21,7 @@
 | 🧠 **ReturnRiskMatrix** | Scores orders across 6 risk dimensions without needing training data |
 | 🤖 **ML Model** | XGBoost classifier trained on historical orders for probability-based prediction |
 | ⚙️ **FastAPI Backend** | REST API with single-order and batch analysis endpoints |
-| 📊 **Live Dashboard** | Streamlit command center with charts, filters, and batch CSV upload |
+| 📊 **Live Dashboard** | Real-time command center with charts, filters, and batch CSV upload |
 | 🔄 **CI/CD Pipeline** | GitHub Actions — lint, test, security scan, Docker build |
 | 🐳 **Docker Ready** | Multi-stage Dockerfile for clean production deployment |
 
@@ -37,6 +47,7 @@ Return-Rate-Reducer/
 │   └── sample_orders.csv         # Sample data for testing/demo
 ├── app.py                        # FastAPI application
 ├── dashboard.py                  # Streamlit dashboard
+├── dashboard_ui.html             # HTML dashboard UI
 ├── config.py                     # Centralised settings (Pydantic)
 ├── requirements.txt
 ├── Dockerfile
@@ -100,6 +111,10 @@ streamlit run dashboard.py
 
 Dashboard → **http://localhost:8501**
 
+### HTML Dashboard
+
+Open `dashboard_ui.html` directly in your browser, or access via the live API at `/dashboard`.
+
 ---
 
 ## 📡 API Endpoints
@@ -107,6 +122,7 @@ Dashboard → **http://localhost:8501**
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/health` | Health check |
+| `GET` | `/dashboard` | HTML Dashboard UI |
 | `POST` | `/analyze-order` | Single order risk analysis |
 | `POST` | `/batch-analyze` | Batch analysis (up to 500 orders) |
 | `GET` | `/risk-levels` | Risk threshold definitions |
@@ -115,7 +131,7 @@ Dashboard → **http://localhost:8501**
 ### Example request
 
 ```bash
-curl -X POST http://localhost:8000/analyze-order \
+curl -X POST https://aryan2323-return-rate-reducer.hf.space/analyze-order \
   -H "Content-Type: application/json" \
   -d '{
     "order_id": "ORD-001",
